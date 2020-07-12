@@ -137,6 +137,19 @@ void rttnw::create_window()
 	colors[ImGuiCol_NavWindowingHighlight]  = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
 	colors[ImGuiCol_NavWindowingDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
 	colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
+
+   
+    accumulated_samples.resize(WIDTH);
+
+    for(auto& x : accumulated_samples)
+    {
+        x.resize(HEIGHT);
+    }
+
+    num_samples = NUM_SAMPLES_DEFAULT;
+
+    
+    
 }
 
 void rttnw::gl_setup()
@@ -200,6 +213,15 @@ void rttnw::gl_setup()
 
 
     // create the image textures
+    glGenTextures(1, &display_texture);
+    glActiveTexture(GL_TEXTURE0+1);  
+    glBindTexture(GL_TEXTURE_2D, display_texture);
+
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); 
+
 
     // compile the compute shader to do the raycasting
 
@@ -234,6 +256,87 @@ void rttnw::draw_everything()
 
 	// draw the stuff on the GPU
 
+    // start a timer
+    auto start = std::chrono::high_resolution_clock::now();
+   
+    int num_threads = 16;
+
+    // launch all the threads
+    std::thread t0(&rttnw::one_thread_sample, this, 0, num_threads);
+    std::thread t1(&rttnw::one_thread_sample, this, 1, num_threads);
+    std::thread t2(&rttnw::one_thread_sample, this, 2, num_threads);
+    std::thread t3(&rttnw::one_thread_sample, this, 3, num_threads);
+    std::thread t4(&rttnw::one_thread_sample, this, 4, num_threads);
+    std::thread t5(&rttnw::one_thread_sample, this, 5, num_threads);
+    std::thread t6(&rttnw::one_thread_sample, this, 6, num_threads);
+    std::thread t7(&rttnw::one_thread_sample, this, 7, num_threads);
+    std::thread t8(&rttnw::one_thread_sample, this, 8, num_threads);
+    std::thread t9(&rttnw::one_thread_sample, this, 9, num_threads);
+    std::thread t10(&rttnw::one_thread_sample, this, 10, num_threads);
+    std::thread t11(&rttnw::one_thread_sample, this, 11, num_threads);
+    std::thread t12(&rttnw::one_thread_sample, this, 12, num_threads);
+    std::thread t13(&rttnw::one_thread_sample, this, 13, num_threads);
+    std::thread t14(&rttnw::one_thread_sample, this, 14, num_threads);
+    std::thread t15(&rttnw::one_thread_sample, this, 15, num_threads);
+
+
+    // join all the threads
+    t0.join();
+    t1.join();
+    t2.join();
+    t3.join();
+    t4.join();
+    t5.join();
+    t6.join();
+    t7.join(); 
+    t8.join();
+    t9.join();
+    t10.join();
+    t11.join();
+    t12.join();
+    t13.join();
+    t14.join();
+    t15.join(); 
+
+
+
+    // increment the sample count
+    sample_count++;
+
+    // stop that timer, add its value to the total time
+    auto end = std::chrono::high_resolution_clock::now();
+    int time_in_milliseconds = (int)std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(end - start).count();
+    total_time += time_in_milliseconds;
+
+    // start a new timer, to see how long it took to send the data to the GPU
+    start = std::chrono::high_resolution_clock::now();
+
+    if(send_tex)
+    {
+        std::vector<unsigned char> tex_data;
+        tex_data.resize(0);
+
+        for(unsigned int y = 0; y < HEIGHT; y++)
+        {for(unsigned int x = 0; x < WIDTH; x++)
+            {
+                tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].x / static_cast<double>(sample_count)))); 
+                tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].y / static_cast<double>(sample_count)))); 
+                tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].z / static_cast<double>(sample_count)))); 
+                tex_data.push_back(static_cast<unsigned char>(255)); 
+            }
+        }
+
+        // buffer the averaged data to the GPU
+        glBindTexture(GL_TEXTURE_2D, display_texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, &tex_data[0]);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+
+    // stop the timer
+    end = std::chrono::high_resolution_clock::now();
+    int time_buffering = (int)std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(end - start).count();
+    total_time += time_buffering;
+
     // texture display
     glUseProgram(display_shader);
     glBindVertexArray( display_vao );
@@ -253,15 +356,23 @@ void rttnw::draw_everything()
 
 	// do my own window
 	ImGui::SetNextWindowPos(ImVec2(10,10));
-	ImGui::SetNextWindowSize(ImVec2(256,385));
+	ImGui::SetNextWindowSize(ImVec2(300, 200));
 	ImGui::Begin("Controls", NULL, 0);
 
-
-
     //do the other widgets
-   HelpMarker("shut up, compiler");
+    ImGui::Text("How many samples do you want?");
 
+    ImGui::InputInt(" ", &num_samples);
+    ImGui::SameLine(); HelpMarker("You can apply arithmetic operators +,*,/ on numerical values.\n  e.g. [ 100 ], input \'*2\', result becomes [ 200 ]\nUse +- to subtract.\n");
+    ImGui::Text("%i samples have been completed", sample_count);
 
+    ImGui::Text(" ");
+    ImGui::Checkbox("Send to GPU each sample: ", &send_tex);
+    
+    ImGui::Text(" ");
+    ImGui::Text("Previous sample took:        %*i ms", 9, time_in_milliseconds);
+    ImGui::Text("Averaging/GPU buffering took:%*i ms", 9, time_buffering);
+    ImGui::Text("Total elapsed:              %*li ms", 10, total_time);
 
 
 
@@ -287,32 +398,19 @@ void rttnw::draw_everything()
 
 		if ((event.type == SDL_KEYUP  && event.key.keysym.sym == SDLK_ESCAPE) || (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_X1)) //x1 is browser back on the mouse
 			pquit = true;
-	}
+        if((event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_SPACE))
+            send_tex = !send_tex; 
+    }
+}
+
+
+void rttnw::one_thread_sample(int index, int count)
+{
+
 }
 
 
 // RTTNW Utility functions
-
-void get_sphere_uv(const glm::dvec3& p, double& u, double& v) {
-    auto phi = atan2(p.z, p.x);
-    auto theta = asin(p.y);
-    u = 1-(phi + pi) / (2*pi);
-    v = (theta + pi/2) / pi;
-}
-
-aabb surrounding_box(aabb box0, aabb box1) {
-    glm::dvec3 small(fmin(box0.min().x, box1.min().x),
-               fmin(box0.min().y, box1.min().y),
-               fmin(box0.min().z, box1.min().z));
-
-    glm::dvec3 big  (fmax(box0.max().x, box1.max().x),
-               fmax(box0.max().y, box1.max().y),
-               fmax(box0.max().z, box1.max().z));
-
-    return aabb(small,big);
-}
-
-
 
 inline bool box_compare(const shared_ptr<hittable> a, const shared_ptr<hittable> b, int axis) {
     aabb box_a;
@@ -390,6 +488,18 @@ bvh_node::bvh_node(
     box = surrounding_box(box_left, box_right);
 }
 
+aabb surrounding_box(aabb box0, aabb box1) {
+    glm::dvec3 small(fmin(box0.min().x, box1.min().x),
+              		 	fmin(box0.min().y, box1.min().y),
+               		fmin(box0.min().z, box1.min().z));
+
+    glm::dvec3 big  (fmax(box0.max().x, box1.max().x),
+               		fmax(box0.max().y, box1.max().y),
+               		fmax(box0.max().z, box1.max().z));
+
+    return aabb(small,big);
+}
+
 void rttnw::quit()
 {
   //shutdown everything
@@ -402,7 +512,41 @@ void rttnw::quit()
   SDL_DestroyWindow(window);
   SDL_Quit();
 
-  cout << "goodbye." << endl;
+  //average the samples and create your output using LodePNG
+    std::vector<unsigned char> tex_data;
+    tex_data.resize(0);             //zero it out
+
+
+
+
+    // iterate through the samples per pixel and compute the average color
+    for(unsigned int y = 1; y <= HEIGHT; y++)         // iterating through y
+    {   for(unsigned int x = 0; x < WIDTH; x++)         // iterating through x
+        {  
+            tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].x / static_cast<double>(sample_count)))); 
+            tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].y / static_cast<double>(sample_count)))); 
+            tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].z / static_cast<double>(sample_count)))); 
+            tex_data.push_back(static_cast<unsigned char>(255)); 
+        }
+    }
+
+
+    unsigned width, height;
+
+    width = WIDTH;
+    height = HEIGHT;
+
+    /* tex_data.resize(4*WIDTH*HEIGHT); */
+    std::string filename = std::string("save.png");
+
+    unsigned error = lodepng::encode(filename.c_str(), tex_data, width, height);
+
+    if(error) std::cout << "decode error during save(\" "+ filename +" \") " << error << ": " << lodepng_error_text(error) << std::endl;
+
+
+
+
+    cout << "goodbye." << endl;
 }
 
 #endif

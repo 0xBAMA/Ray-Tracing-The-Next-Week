@@ -94,6 +94,8 @@ inline glm::dvec3 refract(const glm::dvec3& uv, const glm::dvec3& n, double etai
     return r_out_parallel + r_out_perp;
 }
 
+
+
 class ray
 {
     public:

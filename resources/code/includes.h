@@ -15,6 +15,7 @@
 #include <sstream>
 #include <vector>
 #include <deque>
+#include <thread>
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
@@ -67,5 +68,8 @@ using std::endl;
 //diamond square heightmap generation
 #include "diamond_square.h"
 
+#define NUM_SAMPLES_DEFAULT 512
+#define WIDTH 1024
+#define HEIGHT 512
 
 #endif

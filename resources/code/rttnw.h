@@ -44,6 +44,11 @@ private:
 
 	std::vector<std::vector<glm::dvec3>> accumulated_samples;
 
+    int num_samples;
+    int sample_count = 0;
+
+    long int total_time = 0;
+
 
 	bool pquit;
 	void quit();
