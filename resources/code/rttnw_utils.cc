@@ -4,6 +4,55 @@
 #include "rttnw.h"
 // This contains the lower level code
 
+
+
+hittable_list cornell_final() {
+    hittable_list objects;
+
+    /* auto pertext = make_shared<noise_texture>(0.1); */
+
+    auto red   = make_shared<lambertian>(make_shared<solid_color>(.65, .05, .05));
+    auto white = make_shared<lambertian>(make_shared<solid_color>(.73, .73, .73));
+    auto green = make_shared<lambertian>(make_shared<solid_color>(.12, .45, .15));
+    auto light = make_shared<diffuse_light>(make_shared<solid_color>(7, 7, 7));
+
+    objects.add(make_shared<flip_face>(make_shared<yz_rect>(0, 555, 0, 555, 555, green)));
+    objects.add(make_shared<yz_rect>(0, 555, 0, 555, 0, red));
+    objects.add(make_shared<xz_rect>(123, 423, 147, 412, 554, light));
+    objects.add(make_shared<flip_face>(make_shared<xz_rect>(0, 555, 0, 555, 555, white)));
+    objects.add(make_shared<xz_rect>(0, 555, 0, 555, 0, white));
+    objects.add(make_shared<flip_face>(make_shared<xy_rect>(0, 555, 0, 555, 555, white)));
+
+    /* shared_ptr<hittable> boundary2 = */
+        /* make_shared<box>(glm::dvec3(0,0,0), glm::dvec3(165,165,165), make_shared<dielectric>(1.5)); */
+    /* boundary2 = make_shared<rotate_y>(boundary2, -18); */
+    /* boundary2 = make_shared<translate>(boundary2, glm::dvec3(130,0,65)); */
+
+    /* auto tex = make_shared<solid_color>(0.9, 0.9, 0.9); */
+
+    /* objects.add(boundary2); */
+    /* objects.add(make_shared<constant_medium>(boundary2, 0.002, tex)); */
+
+
+
+    /* auto pertext = make_shared<noise_texture>(4); */
+    /* objects.add(make_shared<sphere>(glm::dvec3(0,0,0), 100, make_shared<lambertian>(make_shared<solid_color>(glm::dvec3(0.2, 0.4, 0.1))))); */
+
+
+
+    auto white_g = make_shared<lambertian>(make_shared<solid_color>(.73, .58, .18));
+    shared_ptr<hittable> box1 = make_shared<box>(glm::dvec3(0,0,0), glm::dvec3(165,330,165), white_g);
+    box1 = make_shared<rotate_y>(box1,  15);
+    box1 = make_shared<translate>(box1, glm::dvec3(265,0,295));
+    objects.add(make_shared<constant_medium>(box1, 0.01, make_shared<solid_color>(0,0,0)));
+
+
+    return objects;
+}
+
+
+
+
 void rttnw::create_window()
 {
 	if(SDL_Init( SDL_INIT_EVERYTHING ) != 0)
@@ -146,11 +195,47 @@ void rttnw::create_window()
         x.resize(HEIGHT);
     }
 
-    num_samples = NUM_SAMPLES_DEFAULT;
+   // set up the world
+    world = cornell_final();    
 
-    
-    
+    // set up the camera
+    glm::dvec3 lookfrom = glm::dvec3(278, 278, -800);
+    glm::dvec3 lookat = glm::dvec3(278, 278, 0);
+    auto vfov = 40.0;
+    glm::dvec3 vup(0,1,0);
+    auto aperture = 0.0;
+    auto dist_to_focus = 10.0;
+    background = glm::dvec3(0,0,0);
+
+    cam = camera(lookfrom, lookat, vup, vfov, 2.0, aperture, dist_to_focus, 0.0, 1.0);
+
 }
+
+
+glm::dvec3 rttnw::ray_color(const ray& r, const glm::dvec3& background, const hittable& world, int depth) {
+    hit_record rec;
+
+    /* cout << "depth is " << depth << endl; */
+
+    // If we've exceeded the ray bounce limit, no more light is gathered.
+    if (depth <= 0)
+        return glm::dvec3(0,0,0);
+
+    // If the ray hits nothing, return the background color.
+    if (!world.hit(r, 0.001, infinity, rec))
+        return background;
+
+    ray scattered;
+    color attenuation;
+    color emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+
+    if (!rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+        return emitted;
+
+    return emitted + attenuation * ray_color(scattered, background, world, depth-1);
+}
+
+
 
 void rttnw::gl_setup()
 {
@@ -298,8 +383,6 @@ void rttnw::draw_everything()
     t14.join();
     t15.join(); 
 
-
-
     // increment the sample count
     sample_count++;
 
@@ -404,9 +487,38 @@ void rttnw::draw_everything()
 }
 
 
-void rttnw::one_thread_sample(int index, int count)
+void rttnw::one_thread_sample(int thread_index, int thread_count)
 {
+    long unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count();
 
+    std::default_random_engine engine{seed};
+    std::uniform_real_distribution<double> distribution{0, 1};
+
+    // do a sample for all the pixels - this takes time
+    for(auto & x : accumulated_samples)
+    {
+        for(auto & y : x)
+        {
+            
+            int x_coord = &x - &accumulated_samples[0];
+            int y_coord = &y - &x[0];
+            
+            if(x_coord % thread_count == thread_index)
+            {
+                double x_fl = (static_cast<double>(x_coord) + distribution(engine))/(static_cast<double>(WIDTH-1)); 
+                double y_fl = (static_cast<double>(y_coord) + distribution(engine))/(static_cast<double>(HEIGHT-1)); 
+
+                ray r = cam.get_ray(x_fl, y_fl);
+
+                // figure out the color, put it in 'sample'
+                glm::dvec3 sample = ray_color(r, background, world, max_depth);
+           
+                // push it onto the vector of samples for this pixel
+                y += sample;
+                
+            }
+        }
+    }
 }
 
 
@@ -486,6 +598,14 @@ bvh_node::bvh_node(
         std::cerr << "No bounding box in bvh_node constructor.\n";
 
     box = surrounding_box(box_left, box_right);
+}
+
+
+void get_sphere_uv(const glm::dvec3& p, double& u, double& v) {
+    auto phi = atan2(p.z, p.x);
+    auto theta = asin(p.y);
+    u = 1-(phi + pi) / (2*pi);
+    v = (theta + pi/2) / pi;
 }
 
 aabb surrounding_box(aabb box0, aabb box1) {

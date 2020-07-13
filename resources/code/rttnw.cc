@@ -10,7 +10,7 @@ rttnw::rttnw()
     gl_debug_enable();
     gl_setup();
 
-    while(!pquit)
+    while(!pquit && sample_count <= num_samples)
     {
         draw_everything();
     }

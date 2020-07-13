@@ -42,8 +42,12 @@ inline double random_double() {
 }
 
 inline double random_double(double min, double max) {
-    // Returns a random real in [min,max).
-    return min + (max-min)*random_double();
+    long unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count();
+
+    std::default_random_engine engine{seed};
+    std::uniform_real_distribution<double> distribution{min, max};
+
+    return distribution(engine);
 }
 
 inline int random_int(int min, int max) {
@@ -67,16 +71,28 @@ inline glm::dvec3 random_unit_vector() {
     return glm::dvec3(r*cos(a), r*sin(a), z);
 }
 
-inline glm::dvec3 random_in_unit_sphere() {
-    while (true) {
-        auto p = glm::dvec3(random_double(), random_double(), random_double());
-        if (p.length()*p.length() >= 1) continue;
-        return p;
-    }
-}
+//inline glm::dvec3 random_in_unit_sphere() {
+  //  while (true) {
+    //    auto p = glm::dvec3(random_double(), random_double(), random_double());
+      //  if (p.length()*p.length() >= 1) continue;
+        //return p;
+    //}
+//}
 
 inline glm::dvec3 random_in_hemisphere(const glm::dvec3& normal) {
-    glm::dvec3 in_unit_sphere = random_in_unit_sphere();
+	// generate random in unit sphere
+	glm::dvec3 random_in_unit_sphere;
+
+	long unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count();
+
+	std::default_random_engine engine{seed};
+	std::uniform_real_distribution<double> distribution{-1, 1};
+	std::normal_distribution<GLfloat> ndistribution(0.0,0.3);            
+
+	random_in_unit_sphere = glm::dvec3(ndistribution(engine), ndistribution(engine), ndistribution(engine)); 
+
+
+    glm::dvec3 in_unit_sphere = random_in_unit_sphere;
     if (dot(in_unit_sphere, normal) > 0.0) // In the same hemisphere as the normal
         return in_unit_sphere;
     else
@@ -614,12 +630,24 @@ class camera {
         }
 
         ray get_ray(double s, double t) const {
-            glm::dvec3 rd = lens_radius * random_in_unit_disk();
+            long unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count();
+
+            std::default_random_engine engine{seed};
+            std::uniform_real_distribution<double> distribution{-1, 1};
+            std::uniform_real_distribution<double> distribution2{time0, time1};
+            std::normal_distribution<GLfloat> ndistribution(0.0,0.3);            
+           
+            glm::dvec3 p;
+            p = glm::dvec3(ndistribution(engine), ndistribution(engine), 0.0);
+            
+            // cout << "ray " << p.x << " " << p.y << " " << p.z << endl; 
+
+            glm::dvec3 rd = lens_radius * p;
             glm::dvec3 offset = u * rd.x + v * rd.y;
             return ray(
                 origin + offset,
                 lower_left_corner + s*horizontal + t*vertical - origin - offset,
-                random_double(time0, time1)
+                distribution2(engine)
             );
         }
 
@@ -930,7 +958,17 @@ class isotropic : public material {
         virtual bool scatter(
             const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
         ) const  {
-            scattered = ray(rec.p, random_in_unit_sphere(), r_in.time());
+        glm::dvec3 random_in_unit_sphere;
+            
+            long unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count();
+
+            std::default_random_engine engine{seed};
+            std::uniform_real_distribution<double> distribution{-1, 1};
+            std::normal_distribution<GLfloat> ndistribution(0.0,0.3);            
+
+            random_in_unit_sphere = glm::dvec3(ndistribution(engine), ndistribution(engine), ndistribution(engine)); 
+            
+            scattered = ray(rec.p, random_in_unit_sphere, r_in.time());
             attenuation = albedo->value(rec.u, rec.v, rec.p);
             return true;
         }
@@ -965,8 +1003,18 @@ class metal : public material {
         virtual bool scatter(
             const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered
         ) const {
+        		glm::dvec3 random_in_unit_sphere;
+            
+            long unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count();
+
+            std::default_random_engine engine{seed};
+            std::uniform_real_distribution<double> distribution{-1, 1};
+            std::normal_distribution<GLfloat> ndistribution(0.0,0.3);            
+
+            random_in_unit_sphere = glm::dvec3(ndistribution(engine), ndistribution(engine), ndistribution(engine)); 
+        
             glm::dvec3 reflected = reflect(glm::normalize(r_in.direction()), rec.normal);
-            scattered = ray(rec.p, reflected + fuzz*random_in_unit_sphere(), r_in.time());
+            scattered = ray(rec.p, reflected + fuzz*random_in_unit_sphere, r_in.time());
             attenuation = albedo;
             return (dot(scattered.direction(), rec.normal) > 0);
         }
