@@ -4,7 +4,7 @@
 #include "includes.h"
 
 //gl debug dump
-void GLAPIENTRY MessageCallback( GLenum source,
+inline void GLAPIENTRY MessageCallback( GLenum source,
                  GLenum type,
                  GLuint id,
                  GLenum severity,
@@ -33,7 +33,7 @@ void GLAPIENTRY MessageCallback( GLenum source,
            ( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ), type, message );
 }
 
-void gl_debug_enable()
+inline void gl_debug_enable()
 {
   //DEBUG ENABLE
   glEnable              ( GL_DEBUG_OUTPUT );
