@@ -11,28 +11,6 @@
 #include "book_code/texture.h"
 
 
-inline glm::dvec3 ray_color(const ray& r, const glm::dvec3& background, const hittable& world, int depth) {
-    hit_record rec;
-
-    // If we've exceeded the ray bounce limit, no more light is gathered.
-    if (depth <= 0)
-        return glm::dvec3(0,0,0);
-
-    // If the ray hits nothing, return the background color.
-    if (!world.hit(r, 0.001, infinity, rec))
-        return background;
-
-    ray scattered;
-    glm::dvec3 attenuation;
-    glm::dvec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
-
-    if (!rec.mat_ptr->scatter(r, rec, attenuation, scattered))
-        return emitted;
-
-    return emitted + attenuation * ray_color(scattered, background, world, depth-1);
-}
-
-
 inline hittable_list random_scene() {
     hittable_list world;
 

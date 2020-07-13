@@ -36,7 +36,7 @@ void rttnw::create_window()
 	cout << "creating window.....................";
 
 	// window = SDL_CreateWindow( "OpenGL Window", 0, 0, total_screen_width, total_screen_height, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_BORDERLESS );
-	window = SDL_CreateWindow( "OpenGL Window", 0, 0, total_screen_width, total_screen_height, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE );
+	window = SDL_CreateWindow( "OpenGL Window", 100, 100, WIDTH, HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE );
   	SDL_ShowWindow(window);
 
 	cout << "done." << endl;
@@ -138,7 +138,7 @@ void rttnw::create_window()
 	colors[ImGuiCol_NavWindowingDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
 	colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 
-   
+
     accumulated_samples.resize(WIDTH);
 
     for(auto& x : accumulated_samples)
@@ -146,6 +146,97 @@ void rttnw::create_window()
         x.resize(HEIGHT);
     }
 
+
+	 const auto aspect_ratio = 1.0 / 1.0;
+    const int image_width = 600;
+    // const int image_height = static_cast<int>(image_width / aspect_ratio);
+
+    glm::dvec3 lookfrom;
+    glm::dvec3 lookat;
+    glm::dvec3 vup(0,1,0);
+    auto vfov = 40.0;
+    auto aperture = 0.0;
+    auto dist_to_focus = 10.0;
+    background = glm::dvec3(0,0,0);
+
+    switch (7) {
+        case 1:
+            world = random_scene();
+            lookfrom = glm::dvec3(13,2,3);
+            lookat = glm::dvec3(0,0,0);
+            vfov = 20.0;
+            background = glm::dvec3(0.70, 0.80, 1.00);
+            break;
+
+        case 2:
+            world = two_spheres();
+            lookfrom = glm::dvec3(13,2,3);
+            lookat = glm::dvec3(0,0,0);
+            vfov = 20.0;
+            background = glm::dvec3(0.70, 0.80, 1.00);
+            break;
+
+        case 3:
+            world = two_perlin_spheres();
+            lookfrom = glm::dvec3(13,2,3);
+            lookat = glm::dvec3(0,0,0);
+            vfov = 20.0;
+            background = glm::dvec3(0.70, 0.80, 1.00);
+            break;
+
+        case 4:
+            world = earth();
+            lookfrom = glm::dvec3(0,0,12);
+            lookat = glm::dvec3(0,0,0);
+            vfov = 20.0;
+            background = glm::dvec3(0.70, 0.80, 1.00);
+            break;
+
+        case 5:
+            world = simple_light();
+            lookfrom = glm::dvec3(26,3,6);
+            lookat = glm::dvec3(0,2,0);
+            vfov = 20.0;
+            break;
+
+        default:
+        case 6:
+            world = cornell_box();
+            lookfrom = glm::dvec3(278, 278, -800);
+            lookat = glm::dvec3(278, 278, 0);
+            vfov = 40.0;
+            break;
+
+        case 7:
+            world = cornell_balls();
+            lookfrom = glm::dvec3(278, 278, -800);
+            lookat = glm::dvec3(278, 278, 0);
+            vfov = 40.0;
+            break;
+
+        case 8:
+            world = cornell_smoke();
+            lookfrom = glm::dvec3(278, 278, -800);
+            lookat = glm::dvec3(278, 278, 0);
+            vfov = 40.0;
+            break;
+
+        case 9:
+            world = cornell_final();
+            lookfrom = glm::dvec3(278, 278, -800);
+            lookat = glm::dvec3(278, 278, 0);
+            vfov = 40.0;
+            break;
+
+        case 10:
+            world = final_scene();
+            lookfrom = glm::dvec3(478, 278, -600);
+            lookat = glm::dvec3(278, 278, 0);
+            vfov = 40.0;
+            break;
+    }
+
+    cam = camera(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
 }
 
 
@@ -211,13 +302,13 @@ void rttnw::gl_setup()
 
     // create the image textures
     glGenTextures(1, &display_texture);
-    glActiveTexture(GL_TEXTURE0+1);  
+    glActiveTexture(GL_TEXTURE0+1);
     glBindTexture(GL_TEXTURE_2D, display_texture);
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 
     // compile the compute shader to do the raycasting
@@ -255,7 +346,7 @@ void rttnw::draw_everything()
 
     // start a timer
     auto start = std::chrono::high_resolution_clock::now();
-   
+
     int num_threads = 16;
 
     // launch all the threads
@@ -285,7 +376,7 @@ void rttnw::draw_everything()
     t4.join();
     t5.join();
     t6.join();
-    t7.join(); 
+    t7.join();
     t8.join();
     t9.join();
     t10.join();
@@ -293,7 +384,8 @@ void rttnw::draw_everything()
     t12.join();
     t13.join();
     t14.join();
-    t15.join(); 
+    t15.join();
+
 
     // increment the sample count
     sample_count++;
@@ -303,8 +395,11 @@ void rttnw::draw_everything()
     int time_in_milliseconds = (int)std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(end - start).count();
     total_time += time_in_milliseconds;
 
+	cout << "sample took " << time_in_milliseconds << "ms" << endl;
+
     // start a new timer, to see how long it took to send the data to the GPU
     start = std::chrono::high_resolution_clock::now();
+
 
     if(send_tex)
     {
@@ -312,12 +407,12 @@ void rttnw::draw_everything()
         tex_data.resize(0);
 
         for(unsigned int y = 0; y < HEIGHT; y++)
-        {for(unsigned int x = 0; x < WIDTH; x++)
+        {	for(unsigned int x = 0; x < WIDTH; x++)
             {
-                tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].x / static_cast<double>(sample_count)))); 
-                tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].y / static_cast<double>(sample_count)))); 
-                tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].z / static_cast<double>(sample_count)))); 
-                tex_data.push_back(static_cast<unsigned char>(255)); 
+                tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].x / static_cast<double>(sample_count))));
+                tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].y / static_cast<double>(sample_count))));
+                tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].z / static_cast<double>(sample_count))));
+                tex_data.push_back(static_cast<unsigned char>(255));
             }
         }
 
@@ -363,7 +458,7 @@ void rttnw::draw_everything()
 
     ImGui::Text(" ");
     ImGui::Checkbox("Send to GPU each sample: ", &send_tex);
-    
+
     ImGui::Text(" ");
     ImGui::Text("Previous sample took:        %*i ms", 9, time_in_milliseconds);
     ImGui::Text("Averaging/GPU buffering took:%*i ms", 9, time_buffering);
@@ -373,6 +468,8 @@ void rttnw::draw_everything()
 
 	ImGui::End();
 	ImGui::Render();
+
+	glViewport(0,0,(int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y);
 
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());   // put imgui data into the framebuffer
 
@@ -394,14 +491,36 @@ void rttnw::draw_everything()
 		if ((event.type == SDL_KEYUP  && event.key.keysym.sym == SDLK_ESCAPE) || (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_X1)) //x1 is browser back on the mouse
 			pquit = true;
         if((event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_SPACE))
-            send_tex = !send_tex; 
+            send_tex = !send_tex;
     }
+}
+
+
+glm::dvec3 rttnw::ray_color(const ray& r, const glm::dvec3& background, const hittable& world, int depth) {
+    hit_record rec;
+
+    // If we've exceeded the ray bounce limit, no more light is gathered.
+    if (depth <= 0)
+        return glm::dvec3(0,0,0);
+
+    // If the ray hits nothing, return the background color.
+    if (!world.hit(r, 0.001, infinity, rec))
+        return background;
+
+    ray scattered;
+    glm::dvec3 attenuation;
+    glm::dvec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+
+    if (!rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+        return emitted;
+
+    return emitted + attenuation * ray_color(scattered, background, world, depth-1);
 }
 
 
 void rttnw::one_thread_sample(int thread_index, int thread_count)
 {
-    /*long unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count();
+    long unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count();
 
     std::default_random_engine engine{seed};
     std::uniform_real_distribution<double> distribution{0, 1};
@@ -411,26 +530,25 @@ void rttnw::one_thread_sample(int thread_index, int thread_count)
     {
         for(auto & y : x)
         {
-            
             int x_coord = &x - &accumulated_samples[0];
             int y_coord = &y - &x[0];
-            
+
             if(x_coord % thread_count == thread_index)
             {
-                double x_fl = (static_cast<double>(x_coord) + distribution(engine))/(static_cast<double>(WIDTH-1)); 
-                double y_fl = (static_cast<double>(y_coord) + distribution(engine))/(static_cast<double>(HEIGHT-1)); 
+                double x_fl = (static_cast<double>(x_coord) + distribution(engine))/(static_cast<double>(WIDTH-1));
+                double y_fl = (static_cast<double>(y_coord) + distribution(engine))/(static_cast<double>(HEIGHT-1));
 
                 ray r = cam.get_ray(x_fl, y_fl);
 
                 // figure out the color, put it in 'sample'
                 glm::dvec3 sample = ray_color(r, background, world, max_depth);
-           
+
                 // push it onto the vector of samples for this pixel
                 y += sample;
-                
+
             }
         }
-    }*/
+    }
 }
 
 void rttnw::quit()
@@ -453,13 +571,13 @@ void rttnw::quit()
 
 
     // iterate through the samples per pixel and compute the average color
-    for(unsigned int y = 1; y <= HEIGHT; y++)         // iterating through y
-    {   for(unsigned int x = 0; x < WIDTH; x++)         // iterating through x
-        {  
-            tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].x / static_cast<double>(sample_count)))); 
-            tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].y / static_cast<double>(sample_count)))); 
-            tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].z / static_cast<double>(sample_count)))); 
-            tex_data.push_back(static_cast<unsigned char>(255)); 
+    for(int y = HEIGHT-1; y >= 0; y--)         // iterating through y
+    {   for(int x = 0; x < WIDTH; x++)         // iterating through x
+        {
+            tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].x / static_cast<double>(sample_count))));
+            tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].y / static_cast<double>(sample_count))));
+            tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].z / static_cast<double>(sample_count))));
+            tex_data.push_back(static_cast<unsigned char>(255));
         }
     }
 

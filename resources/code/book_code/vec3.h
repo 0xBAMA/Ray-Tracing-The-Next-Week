@@ -141,11 +141,18 @@ using std::sqrt;
 // }
 
 inline glm::dvec3 random_in_unit_disk() {
-    while (true) {
-        auto p = glm::dvec3(random_double(-1,1), random_double(-1,1), 0);
-        if (glm::length(p)*glm::length(p) >= 1) continue;
-        return p;
-    }
+    // while (true) {
+    //     auto p = glm::dvec3(random_double(-1,1), random_double(-1,1), 0);
+    //     if (glm::length(p)*glm::length(p) >= 1) continue;
+    //     return p;
+    // }
+
+	long unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count();
+
+	std::default_random_engine engine{seed};
+	std::normal_distribution<double> ndistribution(0.0,0.3);
+
+	return glm::dvec3(ndistribution(engine), ndistribution(engine), 0);
 }
 
 inline glm::dvec3 random_unit_vector() {
@@ -161,6 +168,7 @@ inline glm::dvec3 random_in_unit_sphere() {
         if (glm::length(p)*glm::length(p) >= 1) continue;
         return p;
     }
+
 }
 
 inline glm::dvec3 random_in_hemisphere(const glm::dvec3& normal) {
