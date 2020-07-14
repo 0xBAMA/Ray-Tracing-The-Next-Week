@@ -29,7 +29,7 @@ private:
 	const int max_depth = 50;
 	bool send_tex = true;
 
-    glm::dvec3 background;
+    color background;
 
 	hittable_list world;
 	camera cam;
@@ -42,7 +42,7 @@ private:
 
 
 	void one_thread_sample(int thread_index, int thread_count);
-    glm::dvec3 ray_color(const ray& r, const glm::dvec3& background, const hittable& world, int depth);
+    color ray_color(const ray& r, const color& background, const hittable& world, int depth);
 
 	std::vector<std::vector<glm::dvec3>> accumulated_samples;
 

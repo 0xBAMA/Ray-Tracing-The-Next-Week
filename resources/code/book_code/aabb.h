@@ -17,10 +17,10 @@
 class aabb {
     public:
         aabb() {}
-        aabb(const glm::dvec3& a, const glm::dvec3& b) { _min = a; _max = b; }
+        aabb(const point3& a, const point3& b) { _min = a; _max = b; }
 
-        glm::dvec3 min() const {return _min; }
-        glm::dvec3 max() const {return _max; }
+        point3 min() const {return _min; }
+        point3 max() const {return _max; }
 
         bool hit(const ray& r, double tmin, double tmax) const {
             for (int a = 0; a < 3; a++) {
@@ -37,16 +37,16 @@ class aabb {
         }
 
         double area() const {
-            auto a = _max.x - _min.x;
-            auto b = _max.y - _min.y;
-            auto c = _max.z - _min.z;
+            auto a = _max.x() - _min.x();
+            auto b = _max.y() - _min.y();
+            auto c = _max.z() - _min.z();
             return 2*(a*b + b*c + c*a);
         }
 
         int longest_axis() const {
-            auto a = _max.x - _min.x;
-            auto b = _max.y - _min.y;
-            auto c = _max.z - _min.z;
+            auto a = _max.x() - _min.x();
+            auto b = _max.y() - _min.y();
+            auto c = _max.z() - _min.z();
             if (a > b && a > c)
                 return 0;
             else if (b > c)
@@ -56,18 +56,18 @@ class aabb {
         }
 
     public:
-        glm::dvec3 _min;
-        glm::dvec3 _max;
+        point3 _min;
+        point3 _max;
 };
 
 inline aabb surrounding_box(aabb box0, aabb box1) {
-    glm::dvec3 small(fmin(box0.min().x, box1.min().x),
-               		fmin(box0.min().y, box1.min().y),
-               		fmin(box0.min().z, box1.min().z));
+    vec3 small(fmin(box0.min().x(), box1.min().x()),
+               fmin(box0.min().y(), box1.min().y()),
+               fmin(box0.min().z(), box1.min().z()));
 
-    glm::dvec3 big  (fmax(box0.max().x, box1.max().x),
-               		fmax(box0.max().y, box1.max().y),
-               		fmax(box0.max().z, box1.max().z));
+    vec3 big  (fmax(box0.max().x(), box1.max().x()),
+               fmax(box0.max().y(), box1.max().y()),
+               fmax(box0.max().z(), box1.max().z()));
 
     return aabb(small,big);
 }

@@ -16,12 +16,12 @@
 
 class camera {
     public:
-        camera() : camera(glm::dvec3(0,0,-1), glm::dvec3(0,0,0), glm::dvec3(0,1,0), 40, 1, 0, 10) {}
+        camera() : camera(point3(0,0,-1), point3(0,0,0), vec3(0,1,0), 40, 1, 0, 10) {}
 
         camera(
-            glm::dvec3 lookfrom,
-            glm::dvec3 lookat,
-            glm::dvec3   vup,
+            point3 lookfrom,
+            point3 lookat,
+            vec3   vup,
             double vfov, // vertical field-of-view in degrees
             double aspect_ratio,
             double aperture,
@@ -34,23 +34,23 @@ class camera {
             auto viewport_height = 2.0 * h;
             auto viewport_width = aspect_ratio * viewport_height;
 
-            w = glm::normalize(lookfrom - lookat);
-            u = glm::normalize(glm::cross(vup, w));
-            v = glm::cross(w, u);
+            w = unit_vector(lookfrom - lookat);
+            u = unit_vector(cross(vup, w));
+            v = cross(w, u);
 
             origin = lookfrom;
             horizontal = focus_dist * viewport_width * u;
             vertical = focus_dist * viewport_height * v;
-            lower_left_corner = origin - horizontal/2.0 - vertical/2.0 - focus_dist*w;
+            lower_left_corner = origin - horizontal/2 - vertical/2 - focus_dist*w;
 
-            lens_radius = aperture / 2.0;
+            lens_radius = aperture / 2;
             time0 = t0;
             time1 = t1;
         }
 
         ray get_ray(double s, double t) const {
-            glm::dvec3 rd = lens_radius * random_in_unit_disk();
-            glm::dvec3 offset = u * rd.x + v * rd.y;
+            vec3 rd = lens_radius * random_in_unit_disk();
+            vec3 offset = u * rd.x() + v * rd.y();
             return ray(
                 origin + offset,
                 lower_left_corner + s*horizontal + t*vertical - origin - offset,
@@ -59,11 +59,11 @@ class camera {
         }
 
     private:
-        glm::dvec3 origin;
-        glm::dvec3 lower_left_corner;
-        glm::dvec3 horizontal;
-        glm::dvec3 vertical;
-        glm::dvec3 u, v, w;
+        point3 origin;
+        point3 lower_left_corner;
+        vec3 horizontal;
+        vec3 vertical;
+        vec3 u, v, w;
         double lens_radius;
         double time0, time1;  // shutter open/close times
 };

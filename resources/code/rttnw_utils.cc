@@ -151,90 +151,90 @@ void rttnw::create_window()
     const int image_width = 600;
     // const int image_height = static_cast<int>(image_width / aspect_ratio);
 
-    glm::dvec3 lookfrom;
-    glm::dvec3 lookat;
-    glm::dvec3 vup(0,1,0);
-    auto vfov = 40.0;
-    auto aperture = 0.0;
-    auto dist_to_focus = 10.0;
-    background = glm::dvec3(0,0,0);
+	    point3 lookfrom;
+	    point3 lookat;
+	    vec3 vup(0,1,0);
+	    auto vfov = 40.0;
+	    auto aperture = 0.0;
+	    auto dist_to_focus = 10.0;
+	    background = color(0,0,0);
 
-    switch (7) {
-        case 1:
-            world = random_scene();
-            lookfrom = glm::dvec3(13,2,3);
-            lookat = glm::dvec3(0,0,0);
-            vfov = 20.0;
-            background = glm::dvec3(0.70, 0.80, 1.00);
-            break;
+	    switch (8) {
+	        case 1:
+	            world = random_scene();
+	            lookfrom = point3(13,2,3);
+	            lookat = point3(0,0,0);
+	            vfov = 20.0;
+	            background = color(0.70, 0.80, 1.00);
+	            break;
 
-        case 2:
-            world = two_spheres();
-            lookfrom = glm::dvec3(13,2,3);
-            lookat = glm::dvec3(0,0,0);
-            vfov = 20.0;
-            background = glm::dvec3(0.70, 0.80, 1.00);
-            break;
+	        case 2:
+	            world = two_spheres();
+	            lookfrom = point3(13,2,3);
+	            lookat = point3(0,0,0);
+	            vfov = 20.0;
+	            background = color(0.70, 0.80, 1.00);
+	            break;
 
-        case 3:
-            world = two_perlin_spheres();
-            lookfrom = glm::dvec3(13,2,3);
-            lookat = glm::dvec3(0,0,0);
-            vfov = 20.0;
-            background = glm::dvec3(0.70, 0.80, 1.00);
-            break;
+	        case 3:
+	            world = two_perlin_spheres();
+	            lookfrom = point3(13,2,3);
+	            lookat = point3(0,0,0);
+	            vfov = 20.0;
+	            background = color(0.70, 0.80, 1.00);
+	            break;
 
-        case 4:
-            world = earth();
-            lookfrom = glm::dvec3(0,0,12);
-            lookat = glm::dvec3(0,0,0);
-            vfov = 20.0;
-            background = glm::dvec3(0.70, 0.80, 1.00);
-            break;
+	        case 4:
+	            world = earth();
+	            lookfrom = point3(0,0,12);
+	            lookat = point3(0,0,0);
+	            vfov = 20.0;
+	            background = color(0.70, 0.80, 1.00);
+	            break;
 
-        case 5:
-            world = simple_light();
-            lookfrom = glm::dvec3(26,3,6);
-            lookat = glm::dvec3(0,2,0);
-            vfov = 20.0;
-            break;
+	        case 5:
+	            world = simple_light();
+	            lookfrom = point3(26,3,6);
+	            lookat = point3(0,2,0);
+	            vfov = 20.0;
+	            break;
 
-        default:
-        case 6:
-            world = cornell_box();
-            lookfrom = glm::dvec3(278, 278, -800);
-            lookat = glm::dvec3(278, 278, 0);
-            vfov = 40.0;
-            break;
+	        default:
+	        case 6:
+	            world = cornell_box();
+	            lookfrom = point3(278, 278, -800);
+	            lookat = point3(278, 278, 0);
+	            vfov = 40.0;
+	            break;
 
-        case 7:
-            world = cornell_balls();
-            lookfrom = glm::dvec3(278, 278, -800);
-            lookat = glm::dvec3(278, 278, 0);
-            vfov = 40.0;
-            break;
+	        case 7:
+	            world = cornell_balls();
+	            lookfrom = point3(278, 278, -800);
+	            lookat = point3(278, 278, 0);
+	            vfov = 40.0;
+	            break;
 
-        case 8:
-            world = cornell_smoke();
-            lookfrom = glm::dvec3(278, 278, -800);
-            lookat = glm::dvec3(278, 278, 0);
-            vfov = 40.0;
-            break;
+	        case 8:
+	            world = cornell_smoke();
+	            lookfrom = point3(278, 278, -800);
+	            lookat = point3(278, 278, 0);
+	            vfov = 40.0;
+	            break;
 
-        case 9:
-            world = cornell_final();
-            lookfrom = glm::dvec3(278, 278, -800);
-            lookat = glm::dvec3(278, 278, 0);
-            vfov = 40.0;
-            break;
+	        case 9:
+	            world = cornell_final();
+	            lookfrom = point3(278, 278, -800);
+	            lookat = point3(278, 278, 0);
+	            vfov = 40.0;
+	            break;
 
-        case 10:
-            world = final_scene();
-            lookfrom = glm::dvec3(478, 278, -600);
-            lookat = glm::dvec3(278, 278, 0);
-            vfov = 40.0;
-            break;
-    }
+	        case 10:
+	            world = final_scene();
+	            lookfrom = point3(478, 278, -600);
+	            lookat = point3(278, 278, 0);
+	            vfov = 40.0;
+	            break;
+	    }
 
     cam = camera(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
 }
@@ -409,9 +409,23 @@ void rttnw::draw_everything()
         for(unsigned int y = 0; y < HEIGHT; y++)
         {	for(unsigned int x = 0; x < WIDTH; x++)
             {
-                tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].x / static_cast<double>(sample_count))));
-                tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].y / static_cast<double>(sample_count))));
-                tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].z / static_cast<double>(sample_count))));
+				auto r = accumulated_samples[x][y].x/static_cast<double>(sample_count);
+				auto g = accumulated_samples[x][y].y/static_cast<double>(sample_count);
+				auto b = accumulated_samples[x][y].z/static_cast<double>(sample_count);
+
+				// Replace NaN components with zero. See explanation in Ray Tracing: The Rest of Your Life.
+				if (r != r) r = 0.0;
+				if (g != g) g = 0.0;
+				if (b != b) b = 0.0;
+
+				// gamma-correct for gamma=2.0. (sqrt, aka pow(blah, -2))
+				r = sqrt(r);
+				g = sqrt(g);
+				b = sqrt(b);
+
+                tex_data.push_back(static_cast<int>(256 * clamp(r, 0.0, 0.999)));
+                tex_data.push_back(static_cast<int>(256 * clamp(g, 0.0, 0.999)));
+                tex_data.push_back(static_cast<int>(256 * clamp(b, 0.0, 0.999)));
                 tex_data.push_back(static_cast<unsigned char>(255));
             }
         }
@@ -496,27 +510,26 @@ void rttnw::draw_everything()
 }
 
 
-glm::dvec3 rttnw::ray_color(const ray& r, const glm::dvec3& background, const hittable& world, int depth) {
+color rttnw::ray_color(const ray& r, const color& background, const hittable& world, int depth) {
     hit_record rec;
 
     // If we've exceeded the ray bounce limit, no more light is gathered.
     if (depth <= 0)
-        return glm::dvec3(0,0,0);
+        return color(0,0,0);
 
     // If the ray hits nothing, return the background color.
     if (!world.hit(r, 0.001, infinity, rec))
         return background;
 
     ray scattered;
-    glm::dvec3 attenuation;
-    glm::dvec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+    color attenuation;
+    color emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
 
     if (!rec.mat_ptr->scatter(r, rec, attenuation, scattered))
         return emitted;
 
     return emitted + attenuation * ray_color(scattered, background, world, depth-1);
 }
-
 
 void rttnw::one_thread_sample(int thread_index, int thread_count)
 {
@@ -541,11 +554,10 @@ void rttnw::one_thread_sample(int thread_index, int thread_count)
                 ray r = cam.get_ray(x_fl, y_fl);
 
                 // figure out the color, put it in 'sample'
-                glm::dvec3 sample = ray_color(r, background, world, max_depth);
+                color sample = ray_color(r, background, world, max_depth);
 
                 // push it onto the vector of samples for this pixel
-                y += sample;
-
+                y += glm::dvec3(sample.x(), sample.y(), sample.z());
             }
         }
     }
@@ -574,10 +586,24 @@ void rttnw::quit()
     for(int y = HEIGHT-1; y >= 0; y--)         // iterating through y
     {   for(int x = 0; x < WIDTH; x++)         // iterating through x
         {
-            tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].x / static_cast<double>(sample_count))));
-            tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].y / static_cast<double>(sample_count))));
-            tex_data.push_back(static_cast<unsigned char>(255*(accumulated_samples[x][y].z / static_cast<double>(sample_count))));
-            tex_data.push_back(static_cast<unsigned char>(255));
+			auto r = accumulated_samples[x][y].x/static_cast<double>(sample_count);
+			auto g = accumulated_samples[x][y].y/static_cast<double>(sample_count);
+			auto b = accumulated_samples[x][y].z/static_cast<double>(sample_count);
+
+			// Replace NaN components with zero. See explanation in Ray Tracing: The Rest of Your Life.
+			if (r != r) r = 0.0;
+			if (g != g) g = 0.0;
+			if (b != b) b = 0.0;
+
+			// gamma-correct for gamma=2.0. (sqrt)
+			r = sqrt(r);
+			g = sqrt(g);
+			b = sqrt(b);
+
+			tex_data.push_back(static_cast<int>(256 * clamp(r, 0.0, 0.999)));
+			tex_data.push_back(static_cast<int>(256 * clamp(g, 0.0, 0.999)));
+			tex_data.push_back(static_cast<int>(256 * clamp(b, 0.0, 0.999)));
+			tex_data.push_back(static_cast<unsigned char>(255));
         }
     }
 

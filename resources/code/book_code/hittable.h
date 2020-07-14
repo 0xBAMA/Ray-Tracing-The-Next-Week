@@ -18,25 +18,25 @@
 
 class material;
 
-inline void get_sphere_uv(const glm::dvec3& p, double& u, double& v) {
-    auto phi = atan2(p.z, p.x);
-    auto theta = asin(p.y);
+inline void get_sphere_uv(const point3& p, double& u, double& v) {
+    auto phi = atan2(p.z(), p.x());
+    auto theta = asin(p.y());
     u = 1-(phi + pi) / (2*pi);
     v = (theta + pi/2) / pi;
 }
 
 
 struct hit_record {
-    glm::dvec3 p;
-    glm::dvec3 normal;
+    point3 p;
+    vec3 normal;
     shared_ptr<material> mat_ptr;
     double t;
     double u;
     double v;
     bool front_face;
 
-    inline void set_face_normal(const ray& r, const glm::dvec3& outward_normal) {
-        front_face = glm::dot(r.direction(), outward_normal) < 0;
+    inline void set_face_normal(const ray& r, const vec3& outward_normal) {
+        front_face = dot(r.direction(), outward_normal) < 0;
         normal = front_face ? outward_normal :-outward_normal;
     }
 };
@@ -72,7 +72,7 @@ class flip_face : public hittable {
 
 class translate : public hittable {
     public:
-        translate(shared_ptr<hittable> p, const glm::dvec3& displacement)
+        translate(shared_ptr<hittable> p, const vec3& displacement)
             : ptr(p), offset(displacement) {}
 
         virtual bool hit(const ray& r, double t_min, double t_max, hit_record& rec) const;
@@ -80,7 +80,7 @@ class translate : public hittable {
 
     public:
         shared_ptr<hittable> ptr;
-        glm::dvec3 offset;
+        vec3 offset;
 };
 
 
@@ -133,36 +133,24 @@ inline rotate_y::rotate_y(shared_ptr<hittable> p, double angle) : ptr(p) {
     cos_theta = cos(radians);
     hasbox = ptr->bounding_box(0, 1, bbox);
 
-    glm::dvec3 min( infinity,  infinity,  infinity);
-    glm::dvec3 max(-infinity, -infinity, -infinity);
+    point3 min( infinity,  infinity,  infinity);
+    point3 max(-infinity, -infinity, -infinity);
 
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 2; j++) {
             for (int k = 0; k < 2; k++) {
-                auto x = i*bbox.max().x + (1-i)*bbox.min().x;
-                auto y = j*bbox.max().y + (1-j)*bbox.min().y;
-                auto z = k*bbox.max().z + (1-k)*bbox.min().z;
+                auto x = i*bbox.max().x() + (1-i)*bbox.min().x();
+                auto y = j*bbox.max().y() + (1-j)*bbox.min().y();
+                auto z = k*bbox.max().z() + (1-k)*bbox.min().z();
 
                 auto newx =  cos_theta*x + sin_theta*z;
                 auto newz = -sin_theta*x + cos_theta*z;
 
-                glm::dvec3 tester(newx, y, newz);
+                vec3 tester(newx, y, newz);
 
                 for (int c = 0; c < 3; c++) {
-					switch (c) {
-						case 0:
-							min.x = fmin(min.x, tester.x);
-							max.x = fmax(max.x, tester.x);
-							break;
-						case 1:
-							min.y = fmin(min.y, tester.y);
-							max.y = fmax(max.y, tester.y);
-							break;
-						case 2:
-							min.z = fmin(min.z, tester.z);
-							max.z = fmax(max.z, tester.z);
-							break;
-					}
+                    min[c] = fmin(min[c], tester[c]);
+                    max[c] = fmax(max[c], tester[c]);
                 }
             }
         }
@@ -173,28 +161,28 @@ inline rotate_y::rotate_y(shared_ptr<hittable> p, double angle) : ptr(p) {
 
 
 inline bool rotate_y::hit(const ray& r, double t_min, double t_max, hit_record& rec) const {
-    glm::dvec3 origin = r.origin();
-    glm::dvec3 direction = r.direction();
+    point3 origin = r.origin();
+    vec3 direction = r.direction();
 
-    origin.x = cos_theta*r.origin().x - sin_theta*r.origin().z;
-    origin.z = sin_theta*r.origin().x + cos_theta*r.origin().z;
+    origin[0] = cos_theta*r.origin()[0] - sin_theta*r.origin()[2];
+    origin[2] = sin_theta*r.origin()[0] + cos_theta*r.origin()[2];
 
-    direction.x = cos_theta*r.direction().x - sin_theta*r.direction().z;
-    direction.z = sin_theta*r.direction().x + cos_theta*r.direction().z;
+    direction[0] = cos_theta*r.direction()[0] - sin_theta*r.direction()[2];
+    direction[2] = sin_theta*r.direction()[0] + cos_theta*r.direction()[2];
 
     ray rotated_r(origin, direction, r.time());
 
     if (!ptr->hit(rotated_r, t_min, t_max, rec))
         return false;
 
-    glm::dvec3 p = rec.p;
-    glm::dvec3 normal = rec.normal;
+    point3 p = rec.p;
+    vec3 normal = rec.normal;
 
-    p.x =  cos_theta*rec.p.x + sin_theta*rec.p.z;
-    p.z = -sin_theta*rec.p.x + cos_theta*rec.p.z;
+    p[0] =  cos_theta*rec.p[0] + sin_theta*rec.p[2];
+    p[2] = -sin_theta*rec.p[0] + cos_theta*rec.p[2];
 
-    normal.x =  cos_theta*rec.normal.x + sin_theta*rec.normal.z;
-    normal.z = -sin_theta*rec.normal.x + cos_theta*rec.normal.z;
+    normal[0] =  cos_theta*rec.normal[0] + sin_theta*rec.normal[2];
+    normal[2] = -sin_theta*rec.normal[0] + cos_theta*rec.normal[2];
 
     rec.p = p;
     rec.set_face_normal(rotated_r, normal);

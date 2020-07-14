@@ -68,8 +68,8 @@ using std::endl;
 //diamond square heightmap generation
 #include "diamond_square.h"
 
-#define NUM_SAMPLES_DEFAULT 512
-#define WIDTH 512
-#define HEIGHT 512
+#define NUM_SAMPLES_DEFAULT 8196
+#define WIDTH 1024
+#define HEIGHT 1024
 
 #endif

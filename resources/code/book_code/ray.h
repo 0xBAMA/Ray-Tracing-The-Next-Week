@@ -18,25 +18,25 @@ class ray
 {
     public:
         ray() {}
-        ray(const glm::dvec3& origin, const glm::dvec3& direction)
+        ray(const point3& origin, const vec3& direction)
             : orig(origin), dir(direction), tm(0)
         {}
 
-        ray(const glm::dvec3& origin, const glm::dvec3& direction, double time)
+        ray(const point3& origin, const vec3& direction, double time)
             : orig(origin), dir(direction), tm(time)
         {}
 
-        glm::dvec3 origin() const  { return orig; }
-        glm::dvec3 direction() const { return dir; }
+        point3 origin() const  { return orig; }
+        vec3 direction() const { return dir; }
         double time() const    { return tm; }
 
-        glm::dvec3 at(double t) const {
+        point3 at(double t) const {
             return orig + t*dir;
         }
 
     public:
-        glm::dvec3 orig;
-        glm::dvec3 dir;
+        point3 orig;
+        vec3 dir;
         double tm;
 };
 

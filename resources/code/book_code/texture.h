@@ -15,30 +15,29 @@
 
 #include "perlin.h"
 #include "../includes.h"
-
 #include <iostream>
 
 
 class texture  {
     public:
-        virtual glm::dvec3 value(double u, double v, const glm::dvec3& p) const = 0;
+        virtual color value(double u, double v, const vec3& p) const = 0;
 };
 
 
 class solid_color : public texture {
     public:
         solid_color() {}
-        solid_color(glm::dvec3 c) : color_value(c) {}
+        solid_color(color c) : color_value(c) {}
 
         solid_color(double red, double green, double blue)
-          : solid_color(glm::dvec3(red,green,blue)) {}
+          : solid_color(color(red,green,blue)) {}
 
-        virtual glm::dvec3 value(double u, double v, const glm::dvec3& p) const {
+        virtual color value(double u, double v, const vec3& p) const {
             return color_value;
         }
 
     private:
-        glm::dvec3 color_value;
+        color color_value;
 };
 
 
@@ -47,8 +46,8 @@ class checker_texture : public texture {
         checker_texture() {}
         checker_texture(shared_ptr<texture> t0, shared_ptr<texture> t1): even(t0), odd(t1) {}
 
-        virtual glm::dvec3 value(double u, double v, const glm::dvec3& p) const {
-            auto sines = sin(10*p.x)*sin(10*p.y)*sin(10*p.z);
+        virtual color value(double u, double v, const vec3& p) const {
+            auto sines = sin(10*p.x())*sin(10*p.y())*sin(10*p.z());
             if (sines < 0)
                 return odd->value(u, v, p);
             else
@@ -56,7 +55,7 @@ class checker_texture : public texture {
         }
 
     public:
-        shared_ptr<texture> even;
+		shared_ptr<texture> even;
         shared_ptr<texture> odd;
 };
 
@@ -66,10 +65,10 @@ class noise_texture : public texture {
         noise_texture() {}
         noise_texture(double sc) : scale(sc) {}
 
-        virtual glm::dvec3 value(double u, double v, const glm::dvec3& p) const {
+        virtual color value(double u, double v, const vec3& p) const {
             // return color(1,1,1)*0.5*(1 + noise.turb(scale * p));
             // return color(1,1,1)*noise.turb(scale * p);
-            return glm::dvec3(1,1,1)*0.5*(1 + sin(scale*p.z + 10*noise.turb(p)));
+            return color(1,1,1)*0.5*(1 + sin(scale*p.z() + 10*noise.turb(p)));
         }
 
     public:
@@ -97,10 +96,10 @@ class image_texture : public texture {
             data.clear();
         }
 
-        virtual glm::dvec3 value(double u, double v, const glm::dvec3& p) const {
+        virtual color value(double u, double v, const vec3& p) const {
             // If we have no texture data, then return solid cyan as a debugging aid.
             if (data.empty())
-                return glm::dvec3(0,1,1);
+                return color(0,1,1);
 
             // Clamp input texture coordinates to [0,1] x [1,0]
             u = clamp(u, 0.0, 1.0);
@@ -118,7 +117,7 @@ class image_texture : public texture {
             auto pixelg = data[1 + j*bytes_per_scanline + i*bytes_per_pixel];
             auto pixelb = data[2 + j*bytes_per_scanline + i*bytes_per_pixel];
 
-            return glm::dvec3(color_scale*pixelr, color_scale*pixelg, color_scale*pixelb);
+            return color(color_scale*pixelr, color_scale*pixelg, color_scale*pixelb);
         }
 
     private:

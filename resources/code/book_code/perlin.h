@@ -18,9 +18,9 @@
 class perlin {
     public:
         perlin() {
-            ranvec = new glm::dvec3[point_count];
+            ranvec = new vec3[point_count];
             for (int i = 0; i < point_count; ++i) {
-                ranvec[i] = glm::normalize(glm::dvec3(random_double(-1,1), random_double(-1,1), random_double(-1,1)));
+                ranvec[i] = unit_vector(vec3::random(-1,1));
             }
 
             perm_x = perlin_generate_perm();
@@ -35,14 +35,14 @@ class perlin {
             delete[] perm_z;
         }
 
-        double noise(const glm::dvec3& p) const {
-            auto u = p.x - floor(p.x);
-            auto v = p.y - floor(p.y);
-            auto w = p.z - floor(p.z);
-            auto i = static_cast<int>(floor(p.x));
-            auto j = static_cast<int>(floor(p.y));
-            auto k = static_cast<int>(floor(p.z));
-            glm::dvec3 c[2][2][2];
+        double noise(const point3& p) const {
+            auto u = p.x() - floor(p.x());
+            auto v = p.y() - floor(p.y());
+            auto w = p.z() - floor(p.z());
+            auto i = static_cast<int>(floor(p.x()));
+            auto j = static_cast<int>(floor(p.y()));
+            auto k = static_cast<int>(floor(p.z()));
+            vec3 c[2][2][2];
 
             for (int di=0; di < 2; di++)
                 for (int dj=0; dj < 2; dj++)
@@ -56,7 +56,7 @@ class perlin {
             return perlin_interp(c, u, v, w);
         }
 
-        double turb(const glm::dvec3& p, int depth=7) const {
+        double turb(const point3& p, int depth=7) const {
             auto accum = 0.0;
             auto temp_p = p;
             auto weight = 1.0;
@@ -72,7 +72,7 @@ class perlin {
 
     private:
         static const int point_count = 256;
-        glm::dvec3* ranvec;
+        vec3* ranvec;
         int* perm_x;
         int* perm_y;
         int* perm_z;
@@ -97,7 +97,7 @@ class perlin {
             }
         }
 
-        inline static double perlin_interp(glm::dvec3 c[2][2][2], double u, double v, double w) {
+        inline static double perlin_interp(vec3 c[2][2][2], double u, double v, double w) {
             auto uu = u*u*(3-2*u);
             auto vv = v*v*(3-2*v);
             auto ww = w*w*(3-2*w);
@@ -106,10 +106,10 @@ class perlin {
             for (int i=0; i < 2; i++)
                 for (int j=0; j < 2; j++)
                     for (int k=0; k < 2; k++) {
-                        glm::dvec3 weight_v(u-i, v-j, w-k);
+                        vec3 weight_v(u-i, v-j, w-k);
                         accum += (i*uu + (1-i)*(1-uu))*
                             (j*vv + (1-j)*(1-vv))*
-                            (k*ww + (1-k)*(1-ww))*glm::dot(c[i][j][k], weight_v);
+                            (k*ww + (1-k)*(1-ww))*dot(c[i][j][k], weight_v);
                     }
 
             return accum;
