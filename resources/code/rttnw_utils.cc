@@ -418,10 +418,15 @@ void rttnw::draw_everything()
 				if (g != g) g = 0.0;
 				if (b != b) b = 0.0;
 
-				// gamma-correct for gamma=2.0. (sqrt, aka pow(blah, -2))
-				r = sqrt(r);
-				g = sqrt(g);
-				b = sqrt(b);
+				// // gamma-correct for gamma=2.0. (sqrt, aka pow(blah, -2))
+				// r = sqrt(r);
+				// g = sqrt(g);
+				// b = sqrt(b);
+
+				//more flexible gamma correction
+				r = pow(r, gamma_factor);
+				g = pow(g, gamma_factor);
+				b = pow(b, gamma_factor);
 
                 tex_data.push_back(static_cast<int>(256 * clamp(r, 0.0, 0.999)));
                 tex_data.push_back(static_cast<int>(256 * clamp(g, 0.0, 0.999)));
@@ -460,7 +465,7 @@ void rttnw::draw_everything()
 
 	// do my own window
 	ImGui::SetNextWindowPos(ImVec2(10,10));
-	ImGui::SetNextWindowSize(ImVec2(300, 200));
+	ImGui::SetNextWindowSize(ImVec2(300, 250));
 	ImGui::Begin("Controls", NULL, 0);
 
     //do the other widgets
@@ -469,6 +474,9 @@ void rttnw::draw_everything()
     ImGui::InputInt(" ", &num_samples);
     ImGui::SameLine(); HelpMarker("You can apply arithmetic operators +,*,/ on numerical values.\n  e.g. [ 100 ], input \'*2\', result becomes [ 200 ]\nUse +- to subtract.\n");
     ImGui::Text("%i samples have been completed", sample_count);
+	ImGui::Text(" ");
+
+	ImGui::SliderFloat(" Gamma ", &gamma_factor, 0.0f, 2.0f, "%.3f");
 
     ImGui::Text(" ");
     ImGui::Checkbox("Send to GPU each sample: ", &send_tex);
@@ -595,10 +603,15 @@ void rttnw::quit()
 			if (g != g) g = 0.0;
 			if (b != b) b = 0.0;
 
-			// gamma-correct for gamma=2.0. (sqrt)
-			r = sqrt(r);
-			g = sqrt(g);
-			b = sqrt(b);
+			// // gamma-correct for gamma=2.0. (sqrt)
+			// r = sqrt(r);
+			// g = sqrt(g);
+			// b = sqrt(b);
+
+			//more flexible gamma correction
+			r = pow(r, gamma_factor);
+			g = pow(g, gamma_factor);
+			b = pow(b, gamma_factor);
 
 			tex_data.push_back(static_cast<int>(256 * clamp(r, 0.0, 0.999)));
 			tex_data.push_back(static_cast<int>(256 * clamp(g, 0.0, 0.999)));

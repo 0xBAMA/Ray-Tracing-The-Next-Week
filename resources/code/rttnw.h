@@ -30,6 +30,7 @@ private:
 	bool send_tex = true;
 
     color background;
+    float gamma_factor = 0.5f;
 
 	hittable_list world;
 	camera cam;
